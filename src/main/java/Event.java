@@ -16,6 +16,15 @@ class Event extends Task {
         this.endTime = endTime;
     }
 
+    /**
+     * Returns a command that creates the task
+     */
+    @Override
+    public String getCommand() {
+        String s = super.getCommand();
+        return "event " + s + " /" + Dackel.FROM + " " + this.startTime + " /" + Dackel.UNTIL + " " + this.endTime;
+    }
+
     @Override
     public String toString() {
         String s = "[E]" + super.toString();

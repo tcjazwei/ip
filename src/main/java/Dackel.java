@@ -1,24 +1,33 @@
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.ArrayList;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.IOException;
 
 public class Dackel {
     /** Command aliases */
-    private static final String QUIT = "bye";
-    private static final String LIST = "list";
-    private static final String MARK = "mark";
-    private static final String UNMARK = "unmark";
-    private static final String TODO = "todo";
-    private static final String DEADLINE = "deadline";
-    private static final String EVENT = "event";
-    private static final String DELETE = "delete";
+    static final String QUIT = "bye";
+    static final String LIST = "list";
+    static final String MARK = "mark";
+    static final String UNMARK = "unmark";
+    static final String TODO = "todo";
+    static final String DEADLINE = "deadline";
+    static final String EVENT = "event";
+    static final String DELETE = "delete";
 
     /** Command flags */
-    private static final String COMMAND = "command";
-    private static final String BODY = "body";
-    private static final String BY = "by";
-    private static final String FROM = "from";
-    private static final String UNTIL = "to";
+    static final String COMMAND = "command";
+    static final String BODY = "///";
+    static final String BY = "by";
+    static final String FROM = "from";
+    static final String UNTIL = "to";
+
+    /** File paths */
+    private static final String DATA_PATH = "data.txt";
 
     /** Other String constants */
     private static final String NAME = "DACKEL";
@@ -31,6 +40,10 @@ public class Dackel {
 
     /** Scanner for receiving user input*/
     private static final Scanner SCANNER = new Scanner(System.in);
+
+    /** File IO classes */
+    private static BufferedReader reader = null;
+    private static PrintWriter writer = null;
 
     /** Memory for storing task and instruction data */
     private static ArrayList<Task> storedTasks = new ArrayList<>();
@@ -53,11 +66,50 @@ public class Dackel {
      * Adds a Todo to storedTasks
      * 
      * @param taskName name of task to be added
+     * @param isMarked true if task is marked as done
+     * @param isSilent true if Dackel should not speak when addTodo is executed
      */
-    private static void addTodo(String taskName) {
+    private static void addTodo(String taskName, boolean isMarked, boolean isSilent) {
         Todo newTask = new Todo(taskName);
+        if (isMarked) {
+            newTask.mark();
+        }
         storedTasks.add(newTask);
         numberOfTasks++;
+        if (isSilent) {
+            return;
+        }
+        speak("added the following task to your list!\n " + newTask.toString());
+        speak("your list now has " + String.valueOf(numberOfTasks) + " tasks.");
+    }
+
+    /**
+     * Adds a Todo to storedTasks
+     * 
+     * @param taskName name of task to be added
+     */
+    private static void addTodo(String taskName) {
+        addTodo(taskName, false, false);
+    }
+
+    /**
+     * Adds a Deadline to storedTasks
+     * 
+     * @param taskName name of task to be added
+     * @param dueTime due date/time of task as a String
+     * @param isMarked true if task is marked as done
+     * @param isSilent true if Dackel should not speak when addTodo is executed
+     */
+    private static void addDeadline(String taskName, String dueTime, boolean isMarked, boolean isSilent) {
+        Deadline newTask = new Deadline(taskName, dueTime);
+        if (isMarked) {
+            newTask.mark();
+        }
+        storedTasks.add(newTask);
+        numberOfTasks++;
+        if (isSilent) {
+            return;
+        }
         speak("added the following task to your list!\n " + newTask.toString());
         speak("your list now has " + String.valueOf(numberOfTasks) + " tasks.");
     }
@@ -69,9 +121,28 @@ public class Dackel {
      * @param dueTime due date/time of task as a String
      */
     private static void addDeadline(String taskName, String dueTime) {
-        Deadline newTask = new Deadline(taskName, dueTime);
+        addDeadline(taskName, dueTime, false, false);
+    }
+
+    /**
+     * Adds an Event to storedTasks
+     * 
+     * @param taskName name of task to be added
+     * @param startTime starting date/time of task as a String
+     * @param endTime ending date/time of task as a String
+     * @param isMarked true if task is marked as done
+     * @param isSilent true if Dackel should not speak when addTodo is executed
+     */
+    private static void addEvent(String taskName, String startTime, String endTime, boolean isMarked, boolean isSilent) {
+        Event newTask = new Event(taskName, startTime, endTime);
+        if (isMarked) {
+            newTask.mark();
+        }
         storedTasks.add(newTask);
         numberOfTasks++;
+        if (isSilent) {
+            return;
+        }
         speak("added the following task to your list!\n " + newTask.toString());
         speak("your list now has " + String.valueOf(numberOfTasks) + " tasks.");
     }
@@ -84,11 +155,7 @@ public class Dackel {
      * @param endTime ending date/time of task as a String
      */
     private static void addEvent(String taskName, String startTime, String endTime) {
-        Event newTask = new Event(taskName, startTime, endTime);
-        storedTasks.add(newTask);
-        numberOfTasks++;
-        speak("added the following task to your list!\n " + newTask.toString());
-        speak("your list now has " + String.valueOf(numberOfTasks) + " tasks.");
+        addEvent(taskName, startTime, endTime, false, false);
     }
 
     /**
@@ -150,6 +217,31 @@ public class Dackel {
     }
 
     /**
+     * Handles quitting, alongside errors that may arise during quitting
+     * @return false if Dackel should continue to quit, true otherwise 
+     */
+    private static boolean quit() {
+        try {
+            // save current tasks
+            writeTasksToFile();
+            speak("your tasks have been saved successfully!");
+            return false;
+        }
+        catch (IOException e) {
+            speak("an error occured while trying to save your list!");
+            speak("if i continue to shut down, your current tasks may be lost forever!");
+            speak("would you still like to quit anyway? [Y/n]:");
+            String confirmation = receiveInput();
+            if (confirmation.equals("Y")) {
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+    }
+
+    /**
      * Prompts user for input and returns it
      * 
      * @return User-inputted string
@@ -165,8 +257,8 @@ public class Dackel {
      * 
      * @param input user input as a single String
      * @return void, but sets commandArgs based on the input. 
-     *     commandArgs["command"] is the command, 
-     *     commandArgs["body"] is the unflagged part of the user input,
+     *     commandArgs[COMMAND] is the command, 
+     *     commandArgs[BODY] is the unflagged part of the user input,
      *     subsequent flagged elements are stored as commandArgs[flag name].
      */
     private static void parseInput(String input) {
@@ -206,7 +298,7 @@ public class Dackel {
             if (commandArgs.size() > 1) {
                 throw new DackelException("too many arguments!");
             }
-            return false;
+            return quit();
         case LIST:
             if (commandArgs.size() > 1) {
                 throw new DackelException("too many arguments!");
@@ -316,7 +408,7 @@ public class Dackel {
             if (commandArgs.size() > 4) {
                 throw new DackelException("too many arguments!");
             }
-            addEvent(commandArgs.get(BODY), commandArgs.get(FROM), commandArgs.get(UNTIL));
+            addEvent(body, from, until);
             break;
         case DELETE:
             if (body == null) {
@@ -351,6 +443,43 @@ public class Dackel {
         return true;
     }
 
+    /**
+     * Reads the saved tasks from the file location DATA_PATH and puts them into storedTasks.
+     */
+    public static void readTasksFromFile() throws IOException {
+        reader = new BufferedReader(new FileReader(DATA_PATH));
+        String line;
+        while ((line = reader.readLine()) != null) {
+            parseInput(line);
+            String command = commandArgs.get(COMMAND);
+            switch (command) {
+            case TODO:
+                addTodo(commandArgs.get(BODY), commandArgs.containsKey(MARK), true);
+                break;
+            case DEADLINE:
+                addDeadline(commandArgs.get(BODY), commandArgs.get(BY), commandArgs.containsKey(MARK), true);
+                break;
+            case EVENT:
+                addEvent(commandArgs.get(BODY), commandArgs.get(FROM), commandArgs.get(UNTIL), commandArgs.containsKey(MARK), true);
+                break;
+            default:
+                break;
+            }
+        }
+        reader.close();
+    }
+
+    /**
+     * Write tasks in storedTasks into the file at location DATA_PATH
+     */
+    public static void writeTasksToFile() throws IOException {
+        writer = new PrintWriter(new FileWriter(DATA_PATH));
+        for (Task task: storedTasks) {
+            writer.println(task.getCommand());
+        }
+        writer.close();
+    }
+
     public static void main(String[] args) {
         // title cards, etc.
         System.out.println(LINE);
@@ -358,6 +487,29 @@ public class Dackel {
         System.out.println(VERSION);
         System.out.println(LINE);
         System.out.println();
+
+        // load previously saved tasks
+        System.out.println("Loading previously saved tasks...");
+        try {
+            readTasksFromFile();
+            System.out.println("Tasks successfully loaded.");
+        }
+        catch (FileNotFoundException e) {
+            System.out.println(DATA_PATH + " not found. Creating new save file...");
+            try {
+                writer = new PrintWriter(new FileWriter(DATA_PATH));
+                writer.print("");
+                writer.close();
+                System.out.println(DATA_PATH + " created.");
+            }
+            catch (IOException ee) {
+                System.out.println("The file " + DATA_PATH + " could not be created. Check if there are other files in the directory with similar names.");
+            }
+        }
+        catch (IOException e) {
+            System.out.println("Unknown error occurred while reading the file.");
+            System.out.println("Continuing execution without saved data.");
+        }
 
         // greeting message
         speak("hihi!");

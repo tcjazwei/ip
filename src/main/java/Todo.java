@@ -9,6 +9,15 @@ class Todo extends Task {
         super(name);
     }
 
+    /**
+     * Returns a command that creates the task
+     */
+    @Override
+    public String getCommand() {
+        String s = super.getCommand();
+        return "todo " + s;
+    }
+
     @Override
     public String toString() {
         return "[T]" + super.toString();
