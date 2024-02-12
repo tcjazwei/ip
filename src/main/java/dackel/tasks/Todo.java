@@ -1,4 +1,6 @@
-class Todo extends Task {
+package dackel.tasks;
+
+public class Todo extends Task {
     /**
      * Constructor
      * 

@@ -1,3 +1,5 @@
+package dackel.app;
+
 import java.util.Scanner;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -8,23 +10,28 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.io.IOException;
 
+import dackel.tasks.Task;
+import dackel.tasks.Todo;
+import dackel.tasks.Deadline;
+import dackel.tasks.Event;
+
 public class Dackel {
     /** Command aliases */
-    static final String QUIT = "bye";
-    static final String LIST = "list";
-    static final String MARK = "mark";
-    static final String UNMARK = "unmark";
-    static final String TODO = "todo";
-    static final String DEADLINE = "deadline";
-    static final String EVENT = "event";
-    static final String DELETE = "delete";
+    public static final String QUIT = "bye";
+    public static final String LIST = "list";
+    public static final String MARK = "mark";
+    public static final String UNMARK = "unmark";
+    public static final String TODO = "todo";
+    public static final String DEADLINE = "deadline";
+    public static final String EVENT = "event";
+    public static final String DELETE = "delete";
 
     /** Command flags */
-    static final String COMMAND = "command";
-    static final String BODY = "///";
-    static final String BY = "by";
-    static final String FROM = "from";
-    static final String UNTIL = "to";
+    public static final String COMMAND = "command";
+    public static final String BODY = "///";
+    public static final String BY = "by";
+    public static final String FROM = "from";
+    public static final String UNTIL = "to";
 
     /** File paths */
     private static final String DATA_PATH = "data.txt";

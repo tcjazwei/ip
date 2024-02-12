@@ -1,4 +1,6 @@
-class Deadline extends Task {
+package dackel.tasks;
+
+public class Deadline extends Task {
     private String dueTime;
 
     /**

@@ -1,3 +1,5 @@
+package dackel.tasks;
+
 public class Task {
     private final String taskName;
     private boolean isDone;
