@@ -1,5 +1,5 @@
 public class Task {
-    private String taskName;
+    private final String taskName;
     private boolean isDone;
 
     /**
@@ -25,6 +25,15 @@ public class Task {
      */
     public void unmark() {
         this.isDone = false;
+    }
+
+    /**
+     * Returns a command that creates the task
+     */
+    public String getCommand() {
+        String s = this.taskName;
+        s += this.isDone ? " /" + Dackel.MARK : "";
+        return s;
     }
 
     @Override
